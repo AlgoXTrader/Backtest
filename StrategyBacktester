@@ -1,0 +1,44 @@
+//@version=5
+strategy('StrategyTesterBasic', overlay = true, process_orders_on_close = true)
+
+// Define indicator if needed
+r = ta.rsi(close, 14)
+
+// Set which time range (EST Time) and weekdays you want to trade. (Set tcon true if you want full range)
+t = time(timeframe.period, '0230-1530:12345')
+tcon = not na(t)
+
+// Define your strategy here (Example: Buy if rsi crosses above 70, and sell if crosses below 30)
+long = r > 70 and r[1] < 70
+short = r < 30 and r[1] > 30
+
+buysignal = long
+sellsignal = short
+
+// Define 'false' if you want to exit only with SL and TP
+// Define 'true' if you want to exit with opposite signal.
+e = false
+
+// Set TP and SL based on ATR
+a = ta.atr(14)
+sl = 3
+tp = 15
+
+
+if (strategy.position_size == 0 and tcon)
+    if (buysignal)
+        strategy.entry('enterlong', strategy.long)
+
+if (strategy.position_size == 0 and tcon)
+    if (sellsignal)
+        strategy.entry('entershort', strategy.short)
+
+if (strategy.position_size > 0)
+    strategy.exit('sl&tp long','enterlong', stop = strategy.position_avg_price - a * sl, limit = strategy.position_avg_price + a * tp)
+    if (sellsignal and e)
+        strategy.close('enterlong')
+
+if (strategy.position_size < 0 )
+    strategy.exit('sl&tp short', 'entershort', stop = strategy.position_avg_price + a * sl, limit = strategy.position_avg_price - a * tp)
+    if (buysignal and e)
+        strategy.close('entershort')
